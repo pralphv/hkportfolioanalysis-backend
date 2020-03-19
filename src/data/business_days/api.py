@@ -6,6 +6,11 @@ import requests
 from cachetools import cached
 from dotenv import load_dotenv
 
+try:
+    from ... import constants
+except ImportError:
+    from src import constants
+
 logging.basicConfig(level=logging.DEBUG, format="%(asctime)s:%(levelname)s: %(message)s")
 
 CACHE = {}
@@ -22,7 +27,7 @@ def fetch_data() -> List:
     logging.info(f'Fetching business days from {url}')
     resp = requests.get(url).json()
     logging.info(f'Successfully business days fetched {url}')
-    return resp
+    return resp[-constants.WINDOW:]
 
 
 def clear_cache():
@@ -35,3 +40,4 @@ if __name__ == '__main__':
 
     data = fetch_data()
     data = fetch_data()  # logs should only appear once
+    print(data)
