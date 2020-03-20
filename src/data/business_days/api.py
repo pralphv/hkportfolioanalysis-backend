@@ -1,10 +1,12 @@
-from typing import List
+from typing import Set, List, Union
 import logging
 import os
 import requests
 
 from cachetools import cached
 from dotenv import load_dotenv
+
+from pandas import to_datetime, datetime, Series
 
 try:
     from ... import constants
@@ -17,17 +19,20 @@ CACHE = {}
 
 
 @cached(CACHE)
-def fetch_data() -> List:
+def fetch_data() -> Union[Series, List, datetime]:
     """
     Fetches list of business days from firebase.
     :return:
     """
     url = os.environ.get('FIREBASE_DATABASE_URL')
+    url = 'https://hkportfolioanalysis.firebaseio.com'
     url = f'{url}/businessDays/data.json'
     logging.info(f'Fetching business days from {url}')
     resp = requests.get(url).json()
     logging.info(f'Successfully business days fetched {url}')
-    return resp[-constants.WINDOW:]
+    resp = resp[-constants.WINDOW:]
+    resp = to_datetime(resp, format='%Y%m%d')
+    return resp
 
 
 def clear_cache():
