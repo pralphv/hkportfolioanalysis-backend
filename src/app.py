@@ -1,4 +1,6 @@
+from datetime import datetime, time
 import logging
+
 from flask import Flask, make_response, request, jsonify
 
 from src import data
@@ -8,10 +10,28 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s:%(levelname)s: %(mes
 
 app = Flask(__name__)
 
+LAST_CACHE_RESET = {'date': None}
+
+
+def clear_cache(time_now):
+    data.business_days.clear_cache()
+    data.stock.clear_cache()
+    LAST_CACHE_RESET['date'] = time_now
+
 
 @app.route('/api/hkportfolioanalysis_bundle', methods=['POST'])
 def run():
-    logging.debug("Starting script to update Petangle's sitemap")
+    now = datetime.utcnow()
+    market_closed = now.time() > time(8, 35)  # HKT 4:35pm
+    is_weekday = now.weekday() < 5
+
+    if market_closed and is_weekday:
+        if LAST_CACHE_RESET['date']:
+            if now.day != LAST_CACHE_RESET['date'].day:
+                clear_cache(now)
+        else:
+            clear_cache(now)
+
     try:
         parameters = request.json
         stock_list = parameters['stockList']
