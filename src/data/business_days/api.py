@@ -25,7 +25,6 @@ def fetch_data() -> Union[Series, List, datetime]:
     :return:
     """
     url = os.environ.get('FIREBASE_DATABASE_URL')
-    url = 'https://hkportfolioanalysis.firebaseio.com'
     url = f'{url}/businessDays/data.json'
     logging.info(f'Fetching business days from {url}')
     resp = requests.get(url).json()
