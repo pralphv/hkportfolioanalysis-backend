@@ -1,4 +1,6 @@
 from typing import List
+import logging
+
 from cachetools import LFUCache, cached
 from pandas_datareader.data import get_data_yahoo
 import pandas as pd
@@ -9,6 +11,7 @@ except ImportError:
     from src.data import business_days
 
 STOCK_CACHE = LFUCache(maxsize=500)
+logging.basicConfig(level=logging.DEBUG, format="%(asctime)s:%(levelname)s: %(message)s")
 
 
 @cached(STOCK_CACHE)
@@ -38,6 +41,11 @@ def fetch_stocks(list_of_stocks: List[str]) -> pd.DataFrame:
     stock_df = fetch_data_batch(list_of_stocks, business_days_[0])
     stock_df = standardize_stock_df(stock_df, business_days_)
     return stock_df
+
+
+def clear_cache():
+    STOCK_CACHE.clear()
+    logging.debug(f'Cleared stock data cache')
 
 
 def main():
