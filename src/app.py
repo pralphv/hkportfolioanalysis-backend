@@ -70,8 +70,6 @@ def run_hkportfolioanalysis_bundle():
             'hedge': hedge_obj,
             'equityCurves': equity_curves_obj
         }
-        from pprint import pprint
-        pprint(bundle)
         return make_response(jsonify(bundle), 200)
     except Exception as e:
         # print(e)
