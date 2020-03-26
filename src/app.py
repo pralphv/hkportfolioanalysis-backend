@@ -1,5 +1,6 @@
 from datetime import datetime, time
 import logging
+import traceback
 
 from flask import Flask, make_response, request, jsonify
 
@@ -20,7 +21,7 @@ def clear_cache(time_now):
 
 
 @app.route('/api/hkportfolioanalysis_bundle', methods=['POST'])
-def run():
+def run_hkportfolioanalysis_bundle():
     now = datetime.utcnow()
     market_closed = now.time() > time(8, 35)  # HKT 4:35pm
     is_weekday = now.weekday() < 5
@@ -36,6 +37,7 @@ def run():
         parameters = request.json
         stock_list = parameters['stockList']
         money_list = parameters['moneyList']
+        buy_date = parameters['buyDate']
 
         stock_df = data.stock.fetch_stocks(stock_list)
         stock_pct_df = stock_df.pct_change()[1:]
@@ -55,14 +57,21 @@ def run():
             market_df.iloc[-1].item(),
             portfolio_sum
         )
-
+        equity_curves_obj = finance_stats.generate_equity_curves(
+            portfolio_return,
+            market_returns,
+            buy_date
+        )
         bundle = {
             'sortino': sortino,
             'sharpe': sharpe,
             'lr': lr,
             'correlation_matrix': corr_matrix,
             'hedge': hedge_obj,
+            'equityCurves': equity_curves_obj
         }
+        from pprint import pprint
+        pprint(bundle)
         return make_response(jsonify(bundle), 200)
     except Exception as e:
         # print(e)
@@ -71,4 +80,4 @@ def run():
 
 
 if __name__ == '__main__':
-    app.run(debug=False)
+    app.run(debug=True)
