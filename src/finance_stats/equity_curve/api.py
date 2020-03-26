@@ -19,5 +19,6 @@ def generate_equity_curves(portfolio_return: Series, market_pct_df: DataFrame, b
         dfs.iat[0, i] = 0
     dfs = dfs + 1
     dfs = dfs.cumprod()
+    dfs = dfs - 1
     dfs['date'] = dfs.index.strftime('%Y-%m-%d')
     return dfs.to_dict(orient='record')
