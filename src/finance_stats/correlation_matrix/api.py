@@ -4,4 +4,6 @@ from pandas import DataFrame
 
 
 def calculate_correlation_matrix(stock_pct_df: DataFrame) -> List[Dict]:
-    return stock_pct_df.corr().to_dict(orient='records')
+    corr_df = stock_pct_df.corr().reset_index()
+    dict_ = corr_df.to_dict(orient='records')
+    return dict_

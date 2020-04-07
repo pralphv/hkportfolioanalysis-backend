@@ -1,30 +1,45 @@
 from typing import List
+import asyncio
 import logging
 
 from cachetools import LFUCache, cached
+from dotenv import load_dotenv
 from pandas_datareader.data import get_data_yahoo
 import pandas as pd
 
 try:
     from .. import business_days
+    from ... import utils
 except ImportError:
     from src.data import business_days
+    from src import utils
 
 STOCK_CACHE = LFUCache(maxsize=500)
 logging.basicConfig(level=logging.DEBUG, format="%(asctime)s:%(levelname)s: %(message)s")
 
 
+@utils.async_wrap
 @cached(STOCK_CACHE)
 def fetch_raw_data(stock: str, start: str) -> pd.Series:
+    logging.debug(f'Fetching from Yahoo: {stock}')
     series = get_data_yahoo(stock, start=start)['Adj Close']  # retries 3 times (retry_count)
+    logging.debug(f'Successfully fetched from Yahoo: {stock}')
     return series
 
 
-def fetch_data_batch(list_of_stocks: List[str], start: str) -> pd.DataFrame:
-    stock_series = []
+async def run_throttled(stock, start, sem):
+    async with sem:
+        result = await fetch_raw_data(stock, start)
+    return result
+
+
+async def fetch_data_batch(list_of_stocks: List[str], start: str) -> pd.DataFrame:
+    coroutines = []
+    sem = asyncio.Semaphore(5)
     for stock in list_of_stocks:
-        series = fetch_raw_data(stock, start=start)
-        stock_series.append(series)
+        series = run_throttled(stock, start, sem)
+        coroutines.append(series)
+    stock_series = await asyncio.gather(*coroutines)
     stocks_df = pd.concat(stock_series, axis=1)
     stocks_df.columns = list_of_stocks
     return stocks_df
@@ -36,9 +51,9 @@ def standardize_stock_df(stock_df: pd.DataFrame, business_days_) -> pd.DataFrame
     return stock_df
 
 
-def fetch_stocks(list_of_stocks: List[str]) -> pd.DataFrame:
+async def fetch_stocks(list_of_stocks: List[str]) -> pd.DataFrame:
     business_days_ = business_days.fetch_data()
-    stock_df = fetch_data_batch(list_of_stocks, business_days_[0])
+    stock_df = await fetch_data_batch(list_of_stocks, business_days_[0])
     stock_df = standardize_stock_df(stock_df, business_days_)
     return stock_df
 
@@ -48,12 +63,16 @@ def clear_cache():
     logging.debug(f'Cleared stock data cache')
 
 
-def main():
+async def main():
+    load_dotenv()
+
     stock_list = ['0700.HK', '^HSI']
-    df = fetch_stocks(stock_list)
-    df = fetch_stocks(stock_list)
+    df = await fetch_stocks(stock_list)
+    stock_list = ['0005.HK', '^HSI']
     print(df)
+    df = await fetch_stocks(stock_list)
 
 
 if __name__ == '__main__':
-    main()
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(main())
