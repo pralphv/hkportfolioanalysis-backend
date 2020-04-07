@@ -1,1 +1,1 @@
-web: uvicorn src.app:app --reload
+web: uvicorn src.app:app

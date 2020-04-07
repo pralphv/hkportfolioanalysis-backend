@@ -20,7 +20,8 @@ DEBUG = True if os.name == 'nt' else False  # assume windows is not server
 app = FastAPI()
 
 origins = [
-    "http://localhost:5000",
+    'http://localhost:5000',
+    'https://hkportfolioanalysis.firebaseapp.com/'
 ]
 
 app.add_middleware(
@@ -51,6 +52,7 @@ def clear_cache_scheduler():
         else:
             clear_cache(now)
 
+
 def buy_date_adaptor(buy_date: str):
     """
     20200101 -> 2020-01-01
@@ -62,11 +64,9 @@ def buy_date_adaptor(buy_date: str):
     return buy_date
 
 
-
 @app.post('/api/hkportfolioanalysis_bundle')
 async def run_hkportfolioanalysis_bundle(parameters: models.Bundle):
     clear_cache_scheduler()
-    print("HEY RECEIVED")
     try:
         stockObj = parameters.stockObj
         stock_list = stockObj.keys()
@@ -75,9 +75,6 @@ async def run_hkportfolioanalysis_bundle(parameters: models.Bundle):
         buy_date = buy_date_adaptor(parameters.buyDate)
     except KeyError:
         return 'Bad Input'
-    print(stock_list)
-    print(money_list)
-    print(buy_date)
     try:
         stock_df = await data.stock.fetch_stocks(stock_list)
         stock_pct_df = stock_df.pct_change()[1:]
