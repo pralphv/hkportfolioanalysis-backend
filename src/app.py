@@ -1,6 +1,8 @@
 from datetime import datetime, time
 import logging
+import json
 import os
+import requests
 import traceback
 
 from dotenv import load_dotenv
@@ -11,8 +13,18 @@ from src import models
 from src import data
 from src import finance_stats
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s:%(levelname)s: %(message)s")
 load_dotenv()
+
+def send_slack_msg(msg):
+    slack_hook = os.environ.get("SLACK_HOOK")
+    obj = {'text': msg}
+    requests.put(slack_hook, data=json.dumps(obj))
+
+
+send_slack_msg('HKPORTFOLIOANALYSIS BACKEND has been initiated')
+
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s:%(levelname)s: %(message)s")
 
 LAST_CACHE_RESET = {'date': None}
 
@@ -113,3 +125,5 @@ async def run_hkportfolioanalysis_bundle(parameters: models.Bundle):
         print(e)
         traceback.print_exc()
         return 'Bad Request'
+
+
