@@ -21,9 +21,9 @@ logging.basicConfig(level=logging.DEBUG, format="%(asctime)s:%(levelname)s: %(me
 @utils.async_wrap
 @cached(STOCK_CACHE)
 def fetch_raw_data(stock: str, start: str) -> pd.Series:
-    logging.debug(f'Fetching from Yahoo: {stock}')
+    logging.info(f'Fetching from Yahoo: {stock}')
     series = get_data_yahoo(stock, start=start)['Adj Close']  # retries 3 times (retry_count)
-    logging.debug(f'Successfully fetched from Yahoo: {stock}')
+    logging.info(f'Successfully fetched from Yahoo: {stock}')
     return series
 
 
