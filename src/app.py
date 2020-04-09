@@ -33,6 +33,7 @@ app = FastAPI()
 
 origins = [
     'http://localhost:5000',
+    'https://hkportfolioanalysis.firebaseapp.com',
     'https://hkportfolioanalysis.firebaseapp.com/'
 ]
 
