@@ -90,12 +90,13 @@ async def run_hkportfolioanalysis_bundle(parameters: models.Bundle):
     try:
         stock_df = await data.stock.fetch_stocks(stock_list)
         stock_pct_df = stock_df.pct_change()[1:]
+        stock_pct_df.dropna(axis='index', inplace=True)
         portfolio_sum = sum(money_list)
         weight_list = list(map(lambda x: x / portfolio_sum, money_list))
 
         portfolio_return = stock_pct_df.dot(weight_list)
         market_df = await data.stock.fetch_stocks(['^HSI'])
-        market_returns = market_df.pct_change()[1:]['^HSI']
+        market_returns = market_df.pct_change()[stock_pct_df.index[0]:]['^HSI']
 
         sortino = finance_stats.calculate_sortino(portfolio_return)
         sharpe = finance_stats.calculate_sharpe(portfolio_return)
