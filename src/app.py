@@ -124,8 +124,7 @@ async def run_hkportfolioanalysis_bundle(parameters: models.Bundle):
         }
         return bundle
     except Exception as e:
-        print(e)
-        traceback.print_exc()
+        logging.warning(f'Failed request:\n{e}\n{parameters}')
         return 'Bad Request'
 
 
