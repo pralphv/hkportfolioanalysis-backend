@@ -19,7 +19,7 @@ numpy==1.18.2
 pandas==1.0.3
 pandas-datareader==0.8.1
 poetry-version==0.1.5
-pydantic==1.4
+pydantic==1.6.2
 python-dateutil==2.8.1
 python-dotenv==0.12.0
 pytz==2019.3
